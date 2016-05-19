@@ -1,0 +1,83 @@
+version: '2'
+services:
+  database:
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    image: postgres
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+  web:
+    env_file: .env
+    environment:
+      SENTRY_REDIS_HOST: redis
+      SENTRY_SECRET_KEY: ${SECRET_KEY}
+      SENTRY_POSTGRES_HOST: database
+      SENTRY_POSTGRES_PORT: '5432'
+      SENTRY_DB_NAME: sentry
+      SENTRY_DB_USER: ${DB_USER}
+      SENTRY_DB_PASSWORD: ${DB_PASSWORD}
+      SENTRY_SERVER_EMAIL: ${EMAIL_FROM}
+      SENTRY_EMAIL_HOST: ${EMAIL_HOST}
+      SENTRY_EMAIL_USER: ${EMAIL_USER}
+      SENTRY_EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      SENTRY_EMAIL_PORT: 25
+      SENTRY_PROJECT_ID: ${SENTRY_PROJECT_ID}
+      SENTRY_GOOGLE_CLIENT_ID: ${SENTRY_GOOGLE_CLIENT_ID}
+      SENTRY_GOOGLE_CLIENT_SECRET: ${SENTRY_GOOGLE_CLIENT_SECRET}
+    build: .
+    ports:
+      - "8081:9000"
+    depends_on:
+      - database
+      - redis
+  beat:
+    env_file: .env
+    environment:
+      SENTRY_REDIS_HOST: redis
+      SENTRY_SECRET_KEY: ${SECRET_KEY}
+      SENTRY_POSTGRES_HOST: database
+      SENTRY_POSTGRES_PORT: '5432'
+      SENTRY_DB_NAME: sentry
+      SENTRY_DB_USER: ${DB_USER}
+      SENTRY_DB_PASSWORD: ${DB_PASSWORD}
+      SENTRY_SERVER_EMAIL: ${EMAIL_FROM}
+      SENTRY_EMAIL_HOST: ${EMAIL_HOST}
+      SENTRY_EMAIL_USER: ${EMAIL_USER}
+      SENTRY_EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      SENTRY_EMAIL_PORT: 25
+      SENTRY_PROJECT_ID: ${SENTRY_PROJECT_ID}
+      SENTRY_GOOGLE_CLIENT_ID: ${SENTRY_GOOGLE_CLIENT_ID}
+      SENTRY_GOOGLE_CLIENT_SECRET: ${SENTRY_GOOGLE_CLIENT_SECRET}
+    build: .
+    command: sentry celery beat
+    depends_on:
+      - database
+      - redis
+  worker:
+    env_file: .env
+    environment:
+      SENTRY_REDIS_HOST: redis
+      SENTRY_SECRET_KEY: ${SECRET_KEY}
+      SENTRY_POSTGRES_HOST: database
+      SENTRY_POSTGRES_PORT: '5432'
+      SENTRY_DB_NAME: sentry
+      SENTRY_DB_USER: ${DB_USER}
+      SENTRY_DB_PASSWORD: ${DB_PASSWORD}
+      SENTRY_SERVER_EMAIL: ${EMAIL_FROM}
+      SENTRY_EMAIL_HOST: ${EMAIL_HOST}
+      SENTRY_EMAIL_USER: ${EMAIL_USER}
+      SENTRY_EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      SENTRY_EMAIL_PORT: 25
+      SENTRY_PROJECT_ID: ${SENTRY_PROJECT_ID}
+      SENTRY_GOOGLE_CLIENT_ID: ${SENTRY_GOOGLE_CLIENT_ID}
+      SENTRY_GOOGLE_CLIENT_SECRET: ${SENTRY_GOOGLE_CLIENT_SECRET}
+    build: .
+    command: sentry celery worker
+    depends_on:
+      - beat
